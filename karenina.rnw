@@ -1,0 +1,86 @@
+\documentclass{article}
+\usepackage{natbib}
+\begin{document}
+
+\title{anna karenina}
+\author{William Taylor Bickelmann}
+\maketitle
+
+<<echo=FALSE>>=
+packages <- c('dplyr', 'stringr', 'tidytext', 'tm', 'wordcloud')
+knitr::write_bib(packages,file = 'packages.bib')
+@
+
+\begin{abstract}
+I will be analyzing One of Leo Tolstoy's anna karenina
+\end{abstract}
+
+\section{"Tolstoy's anna karenina"}
+First to get the packages into the session.
+
+<<warning=FALSE,message=FALSE>>=
+library(tidytext)
+library(tm)
+library(wordcloud)
+library(stringr)
+library(dplyr)
+library(knitr)
+library(gutenbergr)
+@
+
+\noindent Then we use gutenbergr to extract the data into a data frame.
+
+<<warning=FALSE,message=FALSE>>=
+gutenberg_works(str_detect(author, "Tolstoy"))
+
+@
+
+<<warning=FALSE,message=FALSE>>=
+df <- gutenberg_download(1399)
+@
+
+
+
+\section{Cleaning the Text}
+Now to break up the dataframe into individual
+<<>>=
+words_df <- df%>%
+  unnest_tokens(word, text)
+
+head(words_df)
+@
+
+\noindent Now to get rid of stop words
+
+<<>>=
+words_df <- words_df%>%
+  filter(!(word %in% stop_words$word))
+
+words_df <- words_df%>%
+  filter(!word == "thy" & !word == "thou" & !word == "thee")
+
+@
+
+\noindent Next is to use dplyr to create a count for each words
+
+<<>>=
+words_free <- words_df%>%
+  group_by(word)%>%
+  summarise(count = n())%>%
+  arrange(-count)
+#make a count of the word
+
+head(words_free)
+@
+
+\section{Wordcloud}
+Next step is the wordcloud
+
+<<warning=FALSE,message=FALSE>>=
+wordcloud(words_free$word, words_free$count, min.freq = 25)
+@
+
+\bibliographystyle{apa}
+\bibliography{bib}
+\nocite{*}
+\end{document}
